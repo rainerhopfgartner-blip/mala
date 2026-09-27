@@ -1,0 +1,13 @@
+{
+  "name": "Chakra Mala",
+  "short_name": "Mala",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#17130f",
+  "theme_color": "#17130f",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

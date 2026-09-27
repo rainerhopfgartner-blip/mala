@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17130f">
+<title>Chakra Mala</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+:root{--bg:#f3ede4;--ink:#2b1f1a;--muted:#8a7668;--bead:#dcd0c0;--panel:#ebe2d6;--hand:#f8f3ec;--c:#c0392b;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#17130f;--ink:#f1e6da;--muted:#9c8878;--bead:#362b25;--panel:#241c18;--hand:#2e2420;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px "IBM Plex Sans",system-ui,sans-serif;padding:env(safe-area-inset-top,0) 16px env(safe-area-inset-bottom,0);
+  display:flex;flex-direction:column;align-items:center;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+.wrap{width:100%;max-width:440px;display:flex;flex-direction:column;gap:10px;padding-block:10px 18px}
+header{display:flex;justify-content:space-between}
+.lbl{font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-variant-numeric:tabular-nums}
+.chakras{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.ck{border:0;background:none;color:var(--muted);cursor:pointer;padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:4px;font:500 .62rem "IBM Plex Sans",sans-serif;border-radius:10px}
+.ck i{width:22px;height:22px;border-radius:50%;background:var(--k);opacity:.35}
+.ck[aria-pressed="true"]{color:var(--ink);background:var(--panel)}
+.ck[aria-pressed="true"] i{opacity:1}
+.ck.full i{opacity:1;box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--k)}
+.ck small{font-size:.6rem;color:var(--muted);font-variant-numeric:tabular-nums}
+button:focus-visible,input:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+#tap{align-self:center;width:min(74vw,290px);aspect-ratio:1;border:0;background:none;color:inherit;cursor:pointer;padding:0;position:relative;touch-action:manipulation}
+#tap svg{width:100%;height:100%}
+.center{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:2px}
+.bija{font-family:"Fraunces",Georgia,serif;font-weight:500;font-size:1.5rem;letter-spacing:.14em;color:var(--c)}
+.count{font-family:"Fraunces",Georgia,serif;font-weight:300;font-size:clamp(3.4rem,17vw,5.2rem);line-height:1;font-variant-numeric:tabular-nums}
+.name{color:var(--muted);font-size:.8rem}
+.mudra{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center;background:var(--panel);border-radius:14px;padding:10px 12px}
+.mudra .pic{color:var(--c);width:110px;height:100px;display:grid;place-items:center}
+.mudra .pic svg{width:100%;height:100%}
+.mudra .pic img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.mudra p{margin:0 0 6px;font-size:.82rem;line-height:1.4}
+.mudra .t{font-weight:500;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.link{border:0;background:none;color:var(--c);font:500 .75rem "IBM Plex Sans",sans-serif;padding:0;cursor:pointer;margin-right:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{flex:1;min-width:52px;padding:10px 0;border-radius:10px;border:1px solid var(--bead);background:var(--panel);color:var(--ink);font:500 .82rem "IBM Plex Sans",sans-serif;cursor:pointer;font-variant-numeric:tabular-nums}
+.chip:disabled{opacity:.4;cursor:default}
+.chip[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:#fff}
+.mic{background:var(--panel);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.meter{height:10px;border-radius:5px;background:var(--bead);position:relative;overflow:hidden}
+.meter b{position:absolute;inset:0 auto 0 0;width:0;background:var(--c);opacity:.8}
+.meter s{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink)}
+.mic label{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--muted)}
+.mic input[type=range]{flex:1;accent-color:var(--c)}
+#micmsg{font-size:.78rem;color:var(--muted);min-height:1.1em}
+.flash{animation:f .5s ease-out}
+@keyframes f{from{transform:scale(1.04)}to{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><span class="lbl" id="sum">Gesamt 0</span><span class="lbl" id="rounds">Runde 1</span></header>
+  <nav class="chakras" id="chakras" aria-label="Chakra wählen"></nav>
+
+  <button id="tap" aria-label="Mantra zählen">
+    <svg id="svg" viewBox="0 0 200 200" aria-hidden="true"></svg>
+    <div class="center">
+      <div class="bija" id="bija"></div>
+      <div class="count" id="count">0</div>
+      <div class="name" id="name"></div>
+    </div>
+  </button>
+
+  <section class="mudra">
+    <div class="pic" id="pic"></div>
+    <div>
+      <div class="t">Handhaltung</div>
+      <p id="mtext"></p>
+      <button class="link" id="foto">Eigenes Foto</button><button class="link" id="skizze" hidden>Skizze zeigen</button>
+      <input type="file" id="file" accept="image/*" hidden>
+    </div>
+  </section>
+
+  <div class="row" id="targets">
+    <button class="chip" data-t="9">9</button><button class="chip" data-t="21">21</button>
+    <button class="chip" data-t="27">27</button><button class="chip" data-t="108">108</button>
+  </div>
+  <div class="row">
+    <button class="chip" id="undo">−1</button>
+    <button class="chip" id="auto">Auto</button>
+    <button class="chip" id="snd">Gong</button>
+    <button class="chip" id="vib">Vibration</button>
+    <button class="chip" id="reset">Reset</button>
+  </div>
+
+  <section class="mic">
+    <div class="row">
+      <button class="chip" id="micbtn">Mithören starten</button>
+      <button class="chip" id="calib" disabled>Stille messen</button>
+    </div>
+    <div class="meter"><b id="lvl"></b><s id="thr"></s></div>
+    <label for="sens">Empfindlichkeit<input type="range" id="sens" min="4" max="30" step="1"></label>
+    <label for="gap">Pause zwischen Mantras<input type="range" id="gap" min="150" max="900" step="50"></label>
+    <div id="micmsg">Zählt jedes gesungene Mantra. Kurz absetzen zwischen den Wiederholungen.</div>
+  </section>
+</div>
+
+<script>
+// ---------- Daten ----------
+const C=[
+ {n:"Wurzel",s:"Muladhara",b:"LAM",k:"#c0392b",f:261.6,m:"Daumen- und Zeigefingerspitze berühren sich. Hände locker auf den Knien, Handflächen nach oben."},
+ {n:"Sakral",s:"Svadhisthana",b:"VAM",k:"#e67e22",f:293.7,m:"Hände im Schoß, Handflächen nach oben, die linke unter der rechten. Die Daumenspitzen berühren sich sanft."},
+ {n:"Solarplexus",s:"Manipura",b:"RAM",k:"#d4a017",f:329.6,m:"Hände vor dem Bauch. Finger gestreckt, die Spitzen berühren sich und zeigen nach vorn. Daumen überkreuzt."},
+ {n:"Herz",s:"Anahata",b:"YAM",k:"#27ae60",f:349.2,m:"Daumen und Zeigefinger berühren sich. Linke Hand auf dem linken Knie, rechte Hand vor dem unteren Brustbein."},
+ {n:"Hals",s:"Vishuddha",b:"HAM",k:"#2e86c1",f:392.0,m:"Finger innen verschränkt, Daumen frei. Die Daumenspitzen berühren sich und werden leicht nach oben gezogen."},
+ {n:"Stirn",s:"Ajna",b:"OM",k:"#5b4fc4",f:440.0,m:"Hände vor der unteren Brust. Mittelfinger gestreckt, Spitzen berühren sich. Übrige Finger gebeugt, Daumen zeigen zu dir und berühren sich."},
+ {n:"Krone",s:"Sahasrara",b:"OM",k:"#8e44ad",f:493.9,m:"Hände vor dem Bauch. Ringfinger zeigen nach oben, Spitzen berühren sich. Übrige Finger verschränkt, linker Daumen unter dem rechten."}];
+
+// ---------- Mudra-Skizzen ----------
+const K=(x,y,l,a,w=9)=>`<rect x="${x-w/2}" y="${y-l}" width="${w}" height="${l}" rx="${w/2}" transform="rotate(${a} ${x} ${y})"/>`;
+const ring=()=>K(57,58,40,-2)+K(66,58,37,3)+K(75,60,30,9)+K(46,58,22,-55)+K(44,84,36,-32)+`<rect x="40" y="50" width="40" height="42" rx="12"/>`;
+const knuck=xs=>xs.map(x=>`<path d="M${x} 58v9" fill="none"/>`).join("");
+const block=`<rect x="30" y="54" width="60" height="36" rx="15"/>`;
+const M=[
+ ring(),
+ K(28,52,34,60)+K(92,52,34,-60)+`<path d="M16 50Q60 108 104 50Q97 47 92 52Q60 92 28 52Q23 47 16 50Z"/><path d="M27 55Q60 97 93 55Q88 51 84 57Q60 84 36 57Q32 51 27 55Z"/>`,
+ K(38,98,64,20,24)+K(82,98,64,-20,24)+K(46,94,26,48)+K(74,94,26,-48),
+ `<g transform="translate(-10,34) scale(.7)">${ring()}</g><g transform="translate(46,-2) scale(.7)">${ring()}</g><text x="22" y="106" font-size="9" fill="currentColor" stroke="none">Knie</text><text x="78" y="72" font-size="9" fill="currentColor" stroke="none">Brust</text>`,
+ K(52,62,36,10)+K(68,62,36,-10)+block+knuck([40,48,56,64,72,80]),
+ K(55.5,62,40,0)+K(64.5,62,40,0)+K(50,86,18,150)+K(70,86,18,-150)+block+knuck([40,48,72,80]),
+ K(54,62,38,5)+K(66,62,38,-5)+block+knuck([40,48,72,80])+K(48,100,24,50)+K(72,100,24,-50)];
+const handSVG=i=>`<svg viewBox="0 0 120 110" fill="var(--hand)" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" aria-hidden="true">${M[i]}</svg>`;
+
+// ---------- Zustand ----------
+const $=id=>document.getElementById(id);
+const z=()=>[0,0,0,0,0,0,0];
+let s={cur:0,target:108,auto:true,vib:true,snd:true,n:z(),r:z(),tot:z(),sens:12,gap:300};
+try{Object.assign(s,JSON.parse(localStorage.getItem("chakra")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("chakra",JSON.stringify(s))}catch(e){}};
+const foto=i=>{try{return localStorage.getItem("mudra"+i)}catch(e){return null}};
+
+$("chakras").innerHTML=C.map((c,i)=>`<button class="ck" data-i="${i}" style="--k:${c.k}"><i></i>${c.b}<small id="t${i}">0</small></button>`).join("");
+$("sens").value=s.sens;$("gap").value=s.gap;
+
+function draw(){
+  const c=C[s.cur],n=s.n[s.cur];
+  document.documentElement.style.setProperty("--c",c.k);
+  const beads=Math.min(s.target,108),per=s.target/beads,filled=Math.floor(n/per);
+  const r=beads>54?3.3:beads>21?4.4:6.5,R=88;
+  let h=`<circle cx="100" cy="${100-R}" r="${r*1.5}" fill="${c.k}"/>`;
+  for(let i=0;i<beads;i++){const a=-Math.PI/2+(i+1)/(beads+1)*2*Math.PI;
+    h+=`<circle cx="${(100+R*Math.cos(a)).toFixed(2)}" cy="${(100+R*Math.sin(a)).toFixed(2)}" r="${r}" fill="${i<filled?c.k:"var(--bead)"}"/>`;}
+  $("svg").innerHTML=h;
+  $("bija").textContent=c.b;$("count").textContent=n;
+  $("name").textContent=`${c.n} · ${c.s} · von ${s.target}`;
+  $("rounds").textContent=`Runde ${s.r[s.cur]+1}`;
+  $("sum").textContent=`Gesamt ${s.tot.reduce((a,b)=>a+b,0)}`;
+  const f=foto(s.cur);
+  $("pic").innerHTML=f?`<img src="${f}" alt="Handhaltung ${c.n}">`:handSVG(s.cur);
+  $("skizze").hidden=!f;$("foto").textContent=f?"Foto ändern":"Eigenes Foto";
+  $("mtext").textContent=c.m;
+  document.querySelectorAll(".ck").forEach((b,i)=>{b.setAttribute("aria-pressed",i===s.cur);b.classList.toggle("full",s.r[i]>0);$("t"+i).textContent=s.tot[i];});
+  document.querySelectorAll("#targets .chip").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.t===s.target));
+  ["vib","auto","snd"].forEach(k=>$(k).setAttribute("aria-pressed",s[k]));
+  showThr();save();
+}
+
+// ---------- Klang ----------
+let ac=null,muteUntil=0;
+const actx=()=>ac||(ac=new (window.AudioContext||window.webkitAudioContext)());
+function gong(f){
+  if(!s.snd)return;
+  const a=actx(),t=a.currentTime;
+  [[1,.5],[2.01,.25],[2.76,.15],[5.4,.06]].forEach(([m,g])=>{
+    const o=a.createOscillator(),v=a.createGain();o.frequency.value=f*m;
+    v.gain.setValueAtTime(0,t);v.gain.linearRampToValueAtTime(g*.5,t+.01);v.gain.exponentialRampToValueAtTime(.0001,t+3.5/m+.5);
+    o.connect(v).connect(a.destination);o.start(t);o.stop(t+4.5);});
+  muteUntil=performance.now()+2500;
+}
+function buzz(ms){if(s.vib&&navigator.vibrate)try{navigator.vibrate(ms)}catch(e){}}
+
+// ---------- Zählen ----------
+function inc(){
+  const i=s.cur;s.n[i]++;s.tot[i]++;
+  if(s.n[i]>=s.target){
+    s.n[i]=0;s.r[i]++;buzz([80,60,200]);
+    if(s.auto&&i<C.length-1)s.cur=i+1;
+    gong(C[s.cur].f);
+    const g=$("tap");g.classList.remove("flash");void g.offsetWidth;g.classList.add("flash");
+  }else buzz(12);
+  draw();
+}
+$("tap").addEventListener("click",inc);
+$("chakras").addEventListener("click",e=>{const b=e.target.closest(".ck");if(b){s.cur=+b.dataset.i;draw();}});
+$("undo").onclick=()=>{const i=s.cur;if(s.n[i]>0){s.n[i]--;s.tot[i]--;}else if(s.r[i]>0){s.r[i]--;s.n[i]=s.target-1;s.tot[i]--;}draw();};
+["vib","auto","snd"].forEach(k=>$(k).onclick=()=>{s[k]=!s[k];draw();});
+document.querySelectorAll("#targets .chip").forEach(b=>b.onclick=()=>{s.target=+b.dataset.t;s.n=s.n.map(x=>x>=s.target?0:x);draw();});
+let armed=0;
+$("reset").onclick=()=>{
+  if(!armed){armed=setTimeout(()=>{armed=0;$("reset").textContent="Reset";},3000);$("reset").textContent="Sicher?";return;}
+  clearTimeout(armed);armed=0;$("reset").textContent="Reset";s.n=z();s.r=z();s.tot=z();s.cur=0;draw();
+};
+
+// ---------- Eigenes Foto ----------
+$("foto").onclick=()=>$("file").click();
+$("skizze").onclick=()=>{try{localStorage.removeItem("mudra"+s.cur)}catch(e){}draw();};
+$("file").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const img=new Image();
+  img.onload=()=>{const m=480,sc=Math.min(1,m/Math.max(img.width,img.height)),cv=document.createElement("canvas");
+    cv.width=img.width*sc;cv.height=img.height*sc;cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+    try{localStorage.setItem("mudra"+s.cur,cv.toDataURL("image/jpeg",.8))}catch(err){$("micmsg").textContent="Foto zu groß zum Speichern.";}
+    URL.revokeObjectURL(img.src);draw();};
+  img.src=URL.createObjectURL(f);e.target.value="";
+};
+
+// ---------- Mithören ----------
+let an=null,buf=null,stream=null,floor=-60,on=false,active=false,aStart=0,quietSince=0,raf=0;
+const dbPos=db=>Math.max(0,Math.min(100,(db+80)/80*100));
+function showThr(){$("thr").style.left=dbPos(floor+s.sens)+"%";}
+$("sens").oninput=e=>{s.sens=+e.target.value;draw();};
+$("gap").oninput=e=>{s.gap=+e.target.value;save();};
+
+async function startMic(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  }catch(e){$("micmsg").textContent="Kein Mikrofonzugriff. Bitte in Chrome für diese Seite erlauben.";return;}
+  const a=actx();await a.resume();
+  an=a.createAnalyser();an.fftSize=1024;buf=new Float32Array(an.fftSize);
+  a.createMediaStreamSource(stream).connect(an);
+  on=true;$("micbtn").textContent="Mithören stoppen";$("micbtn").setAttribute("aria-pressed","true");$("calib").disabled=false;
+  wake();await calibrate();loop();
+}
+function stopMic(){
+  on=false;cancelAnimationFrame(raf);stream&&stream.getTracks().forEach(t=>t.stop());
+  $("micbtn").textContent="Mithören starten";$("micbtn").setAttribute("aria-pressed","false");$("calib").disabled=true;
+  $("lvl").style.width="0";$("micmsg").textContent="Mithören aus.";
+}
+function level(){an.getFloatTimeDomainData(buf);let q=0;for(const v of buf)q+=v*v;return 20*Math.log10(Math.sqrt(q/buf.length)+1e-9);}
+function calibrate(){
+  $("micmsg").textContent="Bitte 2 Sekunden still sein …";
+  return new Promise(res=>{const vals=[],t0=performance.now();
+    (function m(){vals.push(level());if(performance.now()-t0<2000)requestAnimationFrame(m);
+      else{vals.sort((a,b)=>a-b);floor=vals[Math.floor(vals.length*.6)];showThr();
+        $("micmsg").textContent="Bereit. Singe dein Mantra.";res();}})();});
+}
+function loop(){
+  if(!on)return;
+  const db=level(),now=performance.now(),thr=floor+s.sens;
+  $("lvl").style.width=dbPos(db)+"%";
+  if(now>muteUntil){
+    if(!active&&db>thr){active=true;aStart=now;quietSince=0;}
+    else if(active){
+      if(db<thr-3){if(!quietSince)quietSince=now;
+        if(now-quietSince>=s.gap){active=false;if(quietSince-aStart>=150)inc();}}
+      else quietSince=0;
+    }
+  }else active=false;
+  raf=requestAnimationFrame(loop);
+}
+$("micbtn").onclick=()=>on?stopMic():startMic();
+$("calib").onclick=()=>on&&calibrate();
+
+// ---------- Bildschirm an lassen, Offline ----------
+async function wake(){try{await navigator.wakeLock?.request("screen")}catch(e){}}
+wake();document.addEventListener("visibilitychange",()=>{if(!document.hidden)wake();});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+draw();
+</script>
+</body>
+</html>
