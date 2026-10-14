@@ -166,14 +166,32 @@ function draw(){
 // ---------- Klang ----------
 let ac=null,muteUntil=0;
 const actx=()=>ac||(ac=new (window.AudioContext||window.webkitAudioContext)());
+// Audio beim ersten Antippen freischalten (Android verlangt eine Geste)
+document.addEventListener("pointerdown",()=>{try{actx().resume()}catch(e){}},{once:true});
+let out=null;
+function master(a){
+  if(out)return out;
+  const comp=a.createDynamicsCompressor();
+  comp.threshold.value=-18;comp.knee.value=6;comp.ratio.value=8;comp.attack.value=.002;comp.release.value=.3;
+  const g=a.createGain();g.gain.value=2.2;
+  g.connect(comp).connect(a.destination);
+  return out=g;
+}
+// Ein Glockenschlag: Grundton + Obertöne, hell und laut
+function strike(a,f,t,vol){
+  const dst=master(a);
+  [[1,1,"sine"],[2,.6,"triangle"],[2.76,.4,"sine"],[4.07,.25,"sine"],[5.4,.15,"sine"]].forEach(([m,g,type])=>{
+    const o=a.createOscillator(),v=a.createGain();o.type=type;o.frequency.value=f*m;
+    v.gain.setValueAtTime(0,t);v.gain.linearRampToValueAtTime(g*vol,t+.005);
+    v.gain.exponentialRampToValueAtTime(.0001,t+2.8/Math.sqrt(m));
+    o.connect(v).connect(dst);o.start(t);o.stop(t+3);});
+}
+// Chakra-Ende: 3 Schläge, eine Oktave höher (hört man besser am Handy)
 function gong(f){
   if(!s.snd)return;
-  const a=actx(),t=a.currentTime;
-  [[1,.5],[2.01,.25],[2.76,.15],[5.4,.06]].forEach(([m,g])=>{
-    const o=a.createOscillator(),v=a.createGain();o.frequency.value=f*m;
-    v.gain.setValueAtTime(0,t);v.gain.linearRampToValueAtTime(g*.5,t+.01);v.gain.exponentialRampToValueAtTime(.0001,t+3.5/m+.5);
-    o.connect(v).connect(a.destination);o.start(t);o.stop(t+4.5);});
-  muteUntil=performance.now()+2500;
+  const a=actx();a.resume();const t=a.currentTime+.05;
+  strike(a,f*2,t,1);strike(a,f*2,t+.6,1);strike(a,f*2.5,t+1.2,1);
+  muteUntil=performance.now()+4500;
 }
 function buzz(ms){if(s.vib&&navigator.vibrate)try{navigator.vibrate(ms)}catch(e){}}
 
@@ -193,10 +211,18 @@ $("chakras").addEventListener("click",e=>{const b=e.target.closest(".ck");if(b){
 $("undo").onclick=()=>{const i=s.cur;if(s.n[i]>0){s.n[i]--;s.tot[i]--;}else if(s.r[i]>0){s.r[i]--;s.n[i]=s.target-1;s.tot[i]--;}draw();};
 ["vib","auto","snd"].forEach(k=>$(k).onclick=()=>{s[k]=!s[k];draw();});
 document.querySelectorAll("#targets .chip").forEach(b=>b.onclick=()=>{s.target=+b.dataset.t;s.n=s.n.map(x=>x>=s.target?0:x);draw();});
-let armed=0;
+// Reset 2-stufig: 1× tippen = Abfrage, 2× = aktuelles Chakra auf 0, 3× = alles auf 0
+let rStep=0,rTimer=0;
+function rSet(step,label){
+  clearTimeout(rTimer);rStep=step;$("reset").textContent=label;
+  $("reset").setAttribute("aria-pressed",step>0);
+  if(step)rTimer=setTimeout(()=>rSet(0,"Reset"),4000);
+}
 $("reset").onclick=()=>{
-  if(!armed){armed=setTimeout(()=>{armed=0;$("reset").textContent="Reset";},3000);$("reset").textContent="Sicher?";return;}
-  clearTimeout(armed);armed=0;$("reset").textContent="Reset";s.n=z();s.r=z();s.tot=z();s.cur=0;draw();
+  const i=s.cur;
+  if(rStep===0){rSet(1,C[i].b+" auf 0?");return;}
+  if(rStep===1){s.n[i]=0;s.r[i]=0;s.tot[i]=0;draw();rSet(2,"Alle auf 0?");return;}
+  s.n=z();s.r=z();s.tot=z();s.cur=0;draw();rSet(0,"Reset");
 };
 
 // ---------- Eigenes Foto ----------
